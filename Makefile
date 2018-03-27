@@ -13,4 +13,6 @@ main: ${SRC}
 	${CC} -I${INCLUDE_DIR} ${SRC_DIR}notifier.c -o ${OUT_DIR}notifier
 clean: ${OUT_DIR}${OUT}
 	rm $^
+	rm ${OUT_DIR}notifier
+	rm ${INCLUDE_DIR}*.gch
 

@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <string.h>
+#include <unistd.h>
 
 #define LISTEN_PORT 555
 #define DEBUG 1
@@ -32,26 +33,28 @@ int waitForConnection() {
 	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
 		fprintf(stderr,"Failed to bind socket\n");
 		return(2);
-
 	}
 	listen(sockfd,5);
 	clilen = sizeof(cli_addr);
+accept:
 	newsockfd = accept(sockfd, (struct sockaddr*) &cli_addr, &clilen);
 	if (newsockfd < 0) {
 		fprintf(stderr,"Failed to accept\n");
 		return(3);
 	}
-	bzero(buffer,256);
-	n = read(newsockfd,buffer,255);
-	if (n < 0) {
-		fprintf(stderr,"Failed to read from socket\n");
-		return(4);
+	int run = 1;
+	while (run != 0) {
+		bzero(buffer,256);
+		n = read(newsockfd,buffer,255);
+			if (n < 0) {
+			fprintf(stderr,"Failed to read from socket\n");
+			return(4);
+		}
+		printf("%s\n",buffer);
+		n = write(newsockfd,buffer,strlen(buffer));
 	}
-	n = write(newsockfd,"MSG RECV",8);
-	if (n < 0) {
-		fprintf(stderr,"Failed to write to socket\n");
-		return(5);
-	}
+	close(sockfd);
+	close(newsockfd);
 	return 0;
 }
 
@@ -62,11 +65,11 @@ int sendData(char* host) {
 	struct hostent *server;
 
 	char buffer[256];
-	
+
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) {
 		fprintf(stderr,"Failed to open socket\n");
-		return(1);
+		return(2);
 	}
 
 	server = gethostbyname(host);
@@ -82,7 +85,11 @@ int sendData(char* host) {
 		fprintf(stderr,"Failed to connect to host\n");
 		return (3);
 	}
-	n = write(sockfd,"STARTED",strlen("STARTED"));
+getInput:
+	scanf("%s",buffer);
+	if (strcmp(buffer,"exit") == 0)
+		goto end;
+	n = write(sockfd,buffer,strlen(buffer));
 	if (n < 0) {
 		fprintf(stderr,"Failed to write to server\n");
 		return(4);
@@ -92,6 +99,11 @@ int sendData(char* host) {
 		fprintf(stderr,"Failed to read from server\n");
 		return(5);
 	}
+	printf("%s\n",buffer);
+	goto getInput;
+end:
+	if(close(sockfd) != 0)
+		fprintf(stderr,"Failed to close socket\n");
 	return(0);
 }
 
