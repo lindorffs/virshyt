@@ -2,12 +2,10 @@
 #include <string.h>
 
 #include <domainManager.h>
-#include <socket.h>
 
 int rebootDomains();
 int shutdownDomain(char* name);
 int startupDomain(char* name);
-int waitForPacketFromHost(char* dev, char* host);
 void printUsage(char* arg) {
 	fprintf(stderr,"\
 usage: %s --restart\n\
@@ -53,10 +51,6 @@ end:
 }
 
 void pass(){}
-
-int waitForPacketFromHost(char* dev, char* host) {
-	return(0);
-}
 
 int shutdownDomain(char* domain) {
 	virConnectPtr conn = getConnectionPtr(NULL,1);
@@ -131,7 +125,6 @@ int rebootDomains() {
 		pass();
 
 	printf("Stopping logserver\n");
-//	char* domainInterface = getDomainInterface(logserver);
 	stopDomain(logserver);
 	printf("Waiting for logserver to report stopped\n");
 	while(isRunning(logserver) == 1)
@@ -140,28 +133,22 @@ int rebootDomains() {
 	printf("Starting domain logserver\n");
 	startDomain(logserver);
 	printf("Waiting for logserver to ping\n");
-	waitForConnection();
-//	sniffPack(getDomainInterface(domainInterface));
 
 	printf("Starting domain ca\n");
 	startDomain(ca);
 	printf("Waiting for ca to report started\n");
-	waitForConnection();
 
 	printf("Starting domain ldapserver\n");
 	startDomain(ldapserver);
 	printf("Waiting for ldapserver to report started\n");
-	waitForConnection();
 
 	printf("Starting domain webserver\n");
 	startDomain(webserver);
 	printf("Waiting for webserver to report started\n");
-	waitForConnection();
 
 	printf("Starting domain gitserver\n");
 	startDomain(gitserver);
 	printf("Waiting for gitserver to report started\n");
-	waitForConnection();
 normalExit:
 	virDomainFree(logserver);
 	virDomainFree(ca);
