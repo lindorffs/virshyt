@@ -9,10 +9,10 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+
 #define BUF_SIZE 500
 
 void openAndWaitOnSocket(int portno) {
-	printf("Opening socket on %d\n",portno);
 	int sockfd, newsockfd, clilen;
 
 	char buffer[BUF_SIZE];
@@ -31,8 +31,6 @@ void openAndWaitOnSocket(int portno) {
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
 	serv_addr.sin_port = htons(portno);
-
-	printf("Hosting on port %d\n",serv_addr.sin_port);
 
 	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
 		fprintf(stderr, "Failed to bind socket\n");
@@ -56,7 +54,6 @@ void openAndWaitOnSocket(int portno) {
 		fprintf(stderr,"Failed to read socket\n");
 		return;
 	}
-	printf("%s\n",buffer);
 	n = write(newsockfd,"MSGRECV",strlen("MSGRECV"));
 
 	close(newsockfd);

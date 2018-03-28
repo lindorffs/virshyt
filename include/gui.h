@@ -4,9 +4,7 @@
 #include <string.h>
 
 #include <ncurses.h>
-#include <domainManager.h>
 
-char** gDomains;
 
 void initGui() {
 	initscr();
