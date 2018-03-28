@@ -9,13 +9,14 @@
 
 int rebootDomains();
 void startDomains(int);
-void stopDomains();
+void shutdownDomains();
 void printUsage(char* arg) {
 	fprintf(stderr,"\
-usage: %s --restart\n\
+usage: %s --start <domain>\n\
        %s --stop <domain>\n\
-       %s --start <domain>\n\
-", 	arg, arg, arg);
+       %s --restart-app [with-wait] # with-wait requires root\n\
+       %s --start-app [with-wait]   # \"                     \"\n\
+       %s --stop-app\n",arg,arg,arg, arg, arg);
 }
 
 int main(int argc, char** argv) {
@@ -25,7 +26,7 @@ int main(int argc, char** argv) {
 		goto inputError;
 
 	for (char* arg = argv[i]; i < argc; i++) {
-		if (strcmp(arg, "--restart") == 0) {
+		if (strcmp(arg, "--restart-app") == 0) {
 			if ((i + 1) < argc) {
 				if (strcmp(argv[++i],"with-wait") == 0) {
 					printf("Got with-wait\n");
@@ -45,6 +46,8 @@ int main(int argc, char** argv) {
 			domain = argv[++i];
 			virDomainPtr doma = getDomainPtr(domain,conn);
 			ret = stopDomain(doma);
+			virDomainFree(doma);
+			virConnectClose(conn);
 			goto end;
 		} else if (strcmp(arg,"--start") == 0) {
 			if ((argc -i) < 2)
@@ -55,6 +58,8 @@ int main(int argc, char** argv) {
 			domain = argv[++i];
 			virDomainPtr doma = getDomainPtr(domain,conn);
 			ret = startDomain(doma);
+			virDomainFree(doma);
+			virConnectClose(conn);
 			goto end;
 		} else if (strcmp(arg,"--gui") == 0) {
 			initGui();
@@ -62,8 +67,21 @@ int main(int argc, char** argv) {
 			waitInput();
 			killGui();
 			goto end;
-		} else if (strcmp(arg,"--startapp") == 0) {
+		} else if (strcmp(arg,"--start-app") == 0) {
+			if ((i + 1) < argc)
+				if (strcmp(argv[++i],"with-wait") == 0) {
+					printf("Got with-wait\n");
+					sleep(1);
+					startDomains(1);
+					goto end;
+				}
 			startDomains(0);
+			ret = 0;
+			goto end;
+		} else if (strcmp(arg,"--stop-app") == 0) {
+			shutdownDomains();
+			ret = 0;
+			goto end;
 		} else
 			goto inputError;
 	}
