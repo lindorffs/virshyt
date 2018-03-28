@@ -1,7 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <domainManager.h>
+#include <gui.h>
+#include <socket.h>
 
 int rebootDomains();
 int shutdownDomain(char* name);
@@ -39,6 +43,26 @@ int main(int argc, char** argv) {
 			
 			domain = argv[++i];
 			ret = startupDomain(domain);
+			goto end;
+		} else if (strcmp(arg,"--gui") == 0) {
+			initGui();
+			clear();
+			waitInput();
+			killGui();
+			goto end;
+		} else if (strcmp(arg,"--serv") == 0) {
+			if (argc < i + 2)
+				goto inputError;
+			int port = htons(atoi(argv[++i]));
+			openAndWaitOnSocket(port);
+			goto end;
+		} else if (strcmp(arg,"--cli") == 0) {
+			if (argc < i + 4)
+				goto inputError;
+			char *host = argv[++i];
+			int port = htons(atoi(argv[++i]));
+			char *data = argv[++i];
+			connectToAndSendOnSocket(port, host, data);
 			goto end;
 		} else
 			goto inputError;
@@ -101,6 +125,7 @@ startError:
 }
 
 int rebootDomains() {
+	initGui();
 	virConnectPtr conn = getConnectionPtr(NULL,1);
 	if (conn == NULL)
 		goto connError;
@@ -110,45 +135,64 @@ int rebootDomains() {
 	virDomainPtr webserver = getDomainPtr("webserver",conn);
 	virDomainPtr gitserver = getDomainPtr("gitserver",conn);
 
-	printf("Stopping domain gitserver\n");
+	print("Stopping domain gitserver\n");
 	stopDomain(gitserver);
-	printf("Stopping domain webserver\n");
+	print("Stopping domain webserver\n");
 	stopDomain(webserver);
-	printf("Stopping domain ldapserver\n");
+	print("Stopping domain ldapserver\n");
 	stopDomain(ldapserver);
-	printf("Stopping domain ca\n");
+	print("Stopping domain ca\n");
 	stopDomain(ca);
 
-	printf("Waiting for domains to report stopped\n");
+	print("Waiting for domains to report stopped\n");
+	int i = 0;
 	while (isRunning(ca) == 1 | isRunning(ldapserver) == 1 |\
-		isRunning(webserver) == 1 | isRunning(gitserver) == 1)
-		pass();
+		isRunning(webserver) == 1 | isRunning(gitserver) == 1) {
+		clear();
+		int running = isRunning(ca) ? 1 : 0;
+		running += isRunning(ldapserver) ? 1 : 0;
+		running += isRunning(webserver) ? 1: 0;
+		running += isRunning(gitserver) ? 1 : 0;
+		printw("Waiting for domains to report stopped");
+		if (i > 3)
+			i = 0;
+		for (int a = 0; a < i; a++)
+			printw(".");
+		i++;
+		refresh();
+		sleep(1);
+	}
 
-	printf("Stopping logserver\n");
+	print("Stopping logserver\n");
 	stopDomain(logserver);
-	printf("Waiting for logserver to report stopped\n");
+	print("Waiting for logserver to report stopped\n");
 	while(isRunning(logserver) == 1)
 		pass();
 
-	printf("Starting domain logserver\n");
+	print("Starting domain logserver\n");
 	startDomain(logserver);
-	printf("Waiting for logserver to ping\n");
+	print("Waiting for logserver to ping\n");
+	openAndWaitOnSocket(555);
 
-	printf("Starting domain ca\n");
+	print("Starting domain ca\n");
 	startDomain(ca);
-	printf("Waiting for ca to report started\n");
+	print("Waiting for ca to report started\n");
+	openAndWaitOnSocket(556);
 
-	printf("Starting domain ldapserver\n");
+	print("Starting domain ldapserver\n");
 	startDomain(ldapserver);
-	printf("Waiting for ldapserver to report started\n");
+	print("Waiting for ldapserver to report started\n");
+	openAndWaitOnSocket(557);
 
-	printf("Starting domain webserver\n");
+	print("Starting domain webserver\n");
 	startDomain(webserver);
-	printf("Waiting for webserver to report started\n");
+	print("Waiting for webserver to report started\n");
+	openAndWaitOnSocket(558);
 
-	printf("Starting domain gitserver\n");
+	print("Starting domain gitserver\n");
 	startDomain(gitserver);
-	printf("Waiting for gitserver to report started\n");
+	print("Waiting for gitserver to report started\n");
+	openAndWaitOnSocket(559);
 normalExit:
 	virDomainFree(logserver);
 	virDomainFree(ca);
@@ -156,8 +200,12 @@ normalExit:
 	virDomainFree(webserver);
 	virDomainFree(gitserver);
 	virConnectClose(conn);
+	clear();
+	killGui();
 	return(0);
 connError:
+	clear();
+	killGui();
 	return(2);
 }
 

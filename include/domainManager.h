@@ -16,6 +16,13 @@ error:
 	return NULL;
 }
 
+int getNumDomains(virConnectPtr conn) {
+	int numDomains = virConnectNumOfDomains(conn);
+	int *activeDomains;
+
+	activeDomains = malloc(sizeof(int) * numDomains);
+	return virConnectListDomains(conn, activeDomains, numDomains);
+}
 virDomainPtr getDomainPtr(const char *name, virConnectPtr conn) {
 	virDomainPtr ret = NULL;
 	ret = virDomainLookupByName(conn, name);

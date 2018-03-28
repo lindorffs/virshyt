@@ -1,5 +1,5 @@
 CC=gcc
-LIBS=-lvirt -lpcap
+LIBS=-lvirt -lncurses
 INCLUDE_DIR=include/
 
 SRC_DIR=src/
@@ -10,7 +10,7 @@ OUT=virtman
 
 main: ${SRC}
 	${CC} $^ -o ${OUT_DIR}${OUT} -I${INCLUDE_DIR} ${LIBS}
+	${CC} src/notifier.c -o ${OUT_DIR}notifier -I${INCLUDE_DIR}
 clean: ${OUT_DIR}${OUT}
 	rm $^
-	rm ${INCLUDE_DIR}*.gch
-
+	rm ${OUT_DIR}notifier
