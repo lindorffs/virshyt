@@ -9,7 +9,6 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
-
 #define BUF_SIZE 500
 
 void openAndWaitOnSocket(int portno) {

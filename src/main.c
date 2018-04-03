@@ -82,6 +82,12 @@ int main(int argc, char** argv) {
 			shutdownDomains();
 			ret = 0;
 			goto end;
+		} else if (strcmp(arg,"--print-kitteh") == 0) {
+			initGui();
+			drawKitteh("I have stepped on the power switch\n");
+			waitInput();
+			killGui();
+			goto end;
 		} else
 			goto inputError;
 	}
@@ -97,7 +103,7 @@ void pass(){}
 int rebootDomains(int waitForStart) {
 	initGui();
 	if (waitForStart != 1)
-		print("Did not get wait for start.\n");
+		drawKitteh("Did not get wait for start.\n");
 	sleep(1);
 	virConnectPtr conn = getConnectionPtr(NULL,1);
 	if (conn == NULL)
@@ -108,25 +114,25 @@ int rebootDomains(int waitForStart) {
 	virDomainPtr webserver = getDomainPtr("webserver",conn);
 	virDomainPtr gitserver = getDomainPtr("gitserver",conn);
 
-	print("Stopping domain gitserver\n");
+	drawKitteh("version control??\nwho needs it\nI'll just remember every change\n");
+	sleep(2);
 	stopDomain(gitserver);
-	print("Stopping domain webserver\n");
+	drawKitteh("Ahhhh, Pache, my old friend.\nDo you have my milk?\n");
+	sleep(2);
 	stopDomain(webserver);
-	print("Stopping domain ldapserver\n");
+	drawKitteh("authenticating everyone\n");
+	sleep(2);
 	stopDomain(ldapserver);
-	print("Stopping domain ca\n");
+	drawKitteh("git add ssl.key/webserver.key.pem\ngit commit -m \"added key to repo\"\ngit push\n");
+	sleep(2);
 	stopDomain(ca);
 
-	print("Waiting for domains to report stopped\n");
+	drawKitteh("Is it dead yet?\n");
 	int i = 0;
 	while (isRunning(ca) == 1 | isRunning(ldapserver) == 1 |\
 		isRunning(webserver) == 1 | isRunning(gitserver) == 1) {
 		clear();
-		int running = isRunning(ca) ? 1 : 0;
-		running += isRunning(ldapserver) ? 1 : 0;
-	running += isRunning(webserver) ? 1: 0;
-		running += isRunning(gitserver) ? 1 : 0;
-		printw("Waiting for domains to report stopped");
+		drawKitteh("It it dead yet?");
 		if (i > 3)
 			i = 0;
 		for (int a = 0; a < i; a++)
@@ -136,58 +142,66 @@ int rebootDomains(int waitForStart) {
 		sleep(1);
 	}
 
-	print("Stopping logserver\n");
+	drawKitteh("Finally, the last domain!\nLet's kill it!\n");
+	sleep(2);
 	stopDomain(logserver);
-	print("Waiting for logserver to report stopped\n");
+	drawKitteh("DIE LOGSERVER, DIE!\n");
 	while(isRunning(logserver) == 1)
 		pass();
 
-	print("Starting domain logserver\n");
+	drawKitteh("OH NO IM SO SORRY DONT LEAVE ME, COME BACK!\n");
+	sleep(2);
 	startDomain(logserver);
 	if (waitForStart != 1) {
 		goto logStarted;
 	}
-	print("Waiting for logserver to ping\n");
+	drawKitteh("TALK TO MEEEEEEEEEEEEEEEEEEEE\n");
 	sleep(2);
 	openAndWaitOnSocket(555);
 logStarted:
 
-	print("Starting domain ca\n");
+	drawKitteh("I heard you liked CA's, so I built a CA for your CA.\n");
+	sleep(2);
 	startDomain(ca);
 	if (waitForStart != 1)
 		goto caStarted;
-	print("Waiting for ca to report started\n");
+	drawKitteh("Give me life, or give me death.\n-- Someone probably");
+	sleep(2);
 	openAndWaitOnSocket(556);
 caStarted:
 
-	print("Starting domain ldapserver\n");
+	drawKitteh("Wanna auth baby?\n");
+	sleep(2);
 	startDomain(ldapserver);
 	if (waitForStart != 1){
                 printf("Skpped wait!\n");
 		goto ldapStarted;
 	}
-	print("Waiting for ldapserver to report started\n");
+	drawKitteh("Is it moving yet\n");
 	sleep(1);
 	openAndWaitOnSocket(557);
 ldapStarted:
 
-	print("Starting domain webserver\n");
+	drawKitteh("HTTP GET /whatislove.baby\n");
+	sleep(2);
 	startDomain(webserver);
 	if (waitForStart != 1){
                 printf("Skpped wait!\n");
 		goto webStarted;
 	}
-	print("Waiting for webserver to report started\n");
+	drawKitteh("Huh? What server?\nNo, there's no fire.\nNo, the service is totally working fine.\nLemme just... call you back.\n");
+	sleep(2);
 	openAndWaitOnSocket(558);
 webStarted:
 
-	print("Starting domain gitserver\n");
+	drawKitteh("Mmmmmmmmm, conuntry fried steak and gits\n");
+	sleep(2);
 	startDomain(gitserver);
 	if (waitForStart != 1){
                 printf("Skpped wait!\n");
 		goto normalExit;
 	}
-	print("Waiting for gitserver to report started\n");
+	drawKitteh("Come on baby, talk to me\n");
 	openAndWaitOnSocket(559);
 normalExit:
 	virDomainFree(logserver);
@@ -196,6 +210,8 @@ normalExit:
 	virDomainFree(webserver);
 	virDomainFree(gitserver);
 	virConnectClose(conn);
+	drawKitteh("I HAZ DONE THE THINGS!\n");
+	sleep(2);
 	clear();
 	killGui();
 	return(0);
@@ -214,16 +230,16 @@ void shutdownDomains() {
         virDomainPtr webserver = getDomainPtr("webserver",conn);
         virDomainPtr gitserver = getDomainPtr("gitserver",conn);
 
-        print("Stopping domain gitserver\n");
+        drawKitteh("Stopping domain gitserver\n");
         stopDomain(gitserver);
-        print("Stopping domain webserver\n");
+        drawKitteh("Stopping domain webserver\n");
         stopDomain(webserver);
-        print("Stopping domain ldapserver\n");
+        drawKitteh("Stopping domain ldapserver\n");
         stopDomain(ldapserver);
-        print("Stopping domain ca\n");
+        drawKitteh("Stopping domain ca\n");
         stopDomain(ca);
 
-        print("Waiting for domains to report stopped\n");
+        drawKitteh("Waiting for domains to report stopped\n");
         int i = 0;
         while (isRunning(ca) == 1 | isRunning(ldapserver) == 1 |\
                 isRunning(webserver) == 1 | isRunning(gitserver) == 1) {
@@ -241,9 +257,9 @@ void shutdownDomains() {
                 refresh();
                 sleep(1);
         }
-        print("Stopping logserver\n");
+        drawKitteh("Stopping logserver\n");
         stopDomain(logserver);
-        print("Waiting for logserver to report stopped\n");
+        drawKitteh("Waiting for logserver to report stopped\n");
         while(isRunning(logserver) == 1)
                 pass();
         virDomainFree(logserver);
@@ -266,43 +282,43 @@ void startDomains(int waitForStart) {
         virDomainPtr webserver = getDomainPtr("webserver",conn);
         virDomainPtr gitserver = getDomainPtr("gitserver",conn);
 
-        print("Starting domain logserver\n");
+        drawKitteh("Starting domain logserver\n");
         startDomain(logserver);
         if (waitForStart != 1)
                 goto logStarted;
-        print("Waiting for logserver to ping\n");
+        drawKitteh("Waiting for logserver to ping\n");
         openAndWaitOnSocket(555);
 logStarted:
 
-        print("Starting domain ca\n");
+        drawKitteh("Starting domain ca\n");
         startDomain(ca);
         if (waitForStart != 1)
                 goto caStarted;
-        print("Waiting for ca to report started\n");
+        drawKitteh("Waiting for ca to report started\n");
         openAndWaitOnSocket(556);
 caStarted:
 
-        print("Starting domain ldapserver\n");
+        drawKitteh("Starting domain ldapserver\n");
         startDomain(ldapserver);
         if (waitForStart != 1)
                 goto ldapStarted;
-        print("Waiting for ldapserver to report started\n");
+        drawKitteh("Waiting for ldapserver to report started\n");
         openAndWaitOnSocket(557);
 ldapStarted:
 
-        print("Starting domain webserver\n");
+        drawKitteh("Starting domain webserver\n");
         startDomain(webserver);
         if (waitForStart != 1)
                 goto webStarted;
-        print("Waiting for webserver to report started\n");
+        drawKitteh("Waiting for webserver to report started\n");
         openAndWaitOnSocket(558);
 webStarted:
 
-        print("Starting domain gitserver\n");
+        drawKitteh("Starting domain gitserver\n");
         startDomain(gitserver);
         if (waitForStart != 1)
                 goto normalExit;
-        print("Waiting for gitserver to report started\n");
+        drawKitteh("Waiting for gitserver to report started\n");
         openAndWaitOnSocket(559);
 normalExit:
         virDomainFree(logserver);

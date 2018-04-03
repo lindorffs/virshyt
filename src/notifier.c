@@ -12,13 +12,7 @@ int main(int argc, char** argv) {
                 goto inputError;
 
         for (char* arg = argv[i]; i < argc; i++) {
-		if (strcmp(arg,"--serv") == 0) {
-                        if (argc < i + 2)
-                                goto inputError;
-                        int port = atoi(argv[++i]);
-                        openAndWaitOnSocket(port);
-                        goto end;
-                } else if (strcmp(arg,"--cli") == 0) {
+                if (strcmp(arg,"--cli") == 0) {
                         if (argc < i + 4)
                                 goto inputError;
                         char *host = argv[++i];
