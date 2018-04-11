@@ -23,6 +23,7 @@ int getNumDomains(virConnectPtr conn) {
 	activeDomains = malloc(sizeof(int) * numDomains);
 	return virConnectListDomains(conn, activeDomains, numDomains);
 }
+
 virDomainPtr getDomainPtr(const char *name, virConnectPtr conn) {
 	virDomainPtr ret = NULL;
 	ret = virDomainLookupByName(conn, name);
@@ -34,6 +35,7 @@ error:
 	return NULL;
 
 }
+
 
 int isRunning(virDomainPtr doma) {
 	int state = 0;
