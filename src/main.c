@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 		} else if (strcmp(arg,"--stop")==0) {
 		  	if ((argc - i) < 2)
 			   goto inputError;
-			virConnectPtr conn = getConnectionPtr(NULL,1);
+			virConnectPtr conn = getConnectionPtr("qemu+tcp://cis235-studentvm/system",1);
 			char* domain;
 
 			domain = argv[++i];
@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
 		} else if (strcmp(arg,"--start") == 0) {
 			if ((argc -i) < 2)
 				goto inputError;
-			virConnectPtr conn = getConnectionPtr(NULL,1);
+			virConnectPtr conn = getConnectionPtr("qemu+tcp://cis235-studentvm/system",1);
 			char *domain;
 			
 			domain = argv[++i];
@@ -97,13 +97,14 @@ end:
 }
 
 void pass(){}
+void wait();
 
 int rebootDomains(int waitForStart) {
 	initGui();
 	if (waitForStart != 1)
 		drawMessage("Did not get wait for start.");
 	sleep(1);
-	virConnectPtr conn = getConnectionPtr(NULL,1);
+	virConnectPtr conn = getConnectionPtr("qemu+tcp://cis235-studentvm/system",1);
 	if (conn == NULL)
 		goto connError;
 	virDomainPtr logserver = getDomainPtr("logserver",conn);
@@ -136,8 +137,13 @@ int rebootDomains(int waitForStart) {
 		sleep(1);
 	}
 
+
 	drawMessage("stopping logserver");
 	stopDomain(logserver);
+
+	wait();
+
+
 	drawMessage("starting logserver");
 	while(isRunning(logserver) == 1)
 		pass();
@@ -207,7 +213,7 @@ connError:
 
 void shutdownDomains() {
 	initGui();
-	virConnectPtr conn = getConnectionPtr(NULL,1);
+	virConnectPtr conn = getConnectionPtr("qemu+tcp://cis235-studentvm/system",1);
         virDomainPtr logserver = getDomainPtr("logserver",conn);
         virDomainPtr ca = getDomainPtr("ca",conn);
         virDomainPtr ldapserver = getDomainPtr("ldapserver",conn);
@@ -259,7 +265,7 @@ void shutdownDomains() {
 
 void startDomains(int waitForStart) {
 	initGui();
-        virConnectPtr conn = getConnectionPtr(NULL,1);
+        virConnectPtr conn = getConnectionPtr("qemu+tcp://cis235-studentvm/system",1);
         virDomainPtr logserver = getDomainPtr("logserver",conn);
         virDomainPtr ca = getDomainPtr("ca",conn);
         virDomainPtr ldapserver = getDomainPtr("ldapserver",conn);
@@ -313,4 +319,15 @@ normalExit:
         virConnectClose(conn);
         clear();
         killGui();
+}
+
+void wait() {
+	int i = 30;
+	char message[30];
+	while (i >= 0) {
+		sprintf(message, "sleeping for %i secs", i);
+		drawMessage(message);
+		sleep(1);
+		i--;
+	}
 }
