@@ -8,7 +8,8 @@
 #define BORDER 1
 #define BACKGROUND 2
 #define FOREGROUND 3
-int mx, my;
+#define ANNOY 4
+int mx, my, willWait;
 
 char* kitteh[16];
 
@@ -37,6 +38,14 @@ void initGui() {
 	init_pair(BORDER, COLOR_BLACK, COLOR_WHITE);
 	init_pair(BACKGROUND, COLOR_BLACK, COLOR_BLUE);
 	init_pair(FOREGROUND, COLOR_WHITE, COLOR_BLACK);
+	init_pair(ANNOY, COLOR_BLACK, COLOR_RED);
+}
+
+void setWait() {
+	if (willWait != 0)
+		willWait = 0;
+	else
+		willWait = 1;
 }
 
 void drawMessage(char* message) {
@@ -71,6 +80,15 @@ void drawMessage(char* message) {
         move( 2 + sizeof(kitteh)/sizeof(char*) + 2, (mx / 2) - (strlen(message) / 2));
         printw("%s",message);
         attroff(COLOR_PAIR(FOREGROUND));
+
+	if (willWait) {
+		attron(COLOR_PAIR(ANNOY));
+
+		move(3,3);
+		printw("LOOK AT ME I HAVE TO WAIT!");
+
+		attroff(COLOR_PAIR(ANNOY));
+	}
 	refresh();
 }
 

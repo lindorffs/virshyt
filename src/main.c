@@ -48,6 +48,7 @@ int main(int argc, char** argv) {
 		if (strcmp(arg, "--restart-app") == 0) {
 			if ((i + 1) < argc) {
 				if (strcmp(argv[++i],"with-wait") == 0) {
+					setWait();
 					rebootDomains(1);
 					goto end;
 				}
@@ -59,6 +60,7 @@ int main(int argc, char** argv) {
 				if (strcmp(argv[++i],"with-wait") == 0) {
 					printf("Got with-wait\n");
 					sleep(1);
+					setWait();
 					startDomains(1);
 					goto end;
 				}
