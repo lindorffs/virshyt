@@ -16,9 +16,9 @@ virConnectPtr conn;
 
 // Function Prototypes
 
-void rebootDomains();
-void startDomains(int);
-void stopDomains();
+int rebootDomains();
+int startDomains(int);
+int stopDomains();
 
 void wait();
 void pass() {};
@@ -28,9 +28,10 @@ void printUsage(char* arg) {
 	fprintf(stderr,"\
 usage: %s --start <domain>\n\
        %s --stop <domain>\n\
+       %s --status <domain>\n\
        %s --restart-app [with-wait] # with-wait requires root\n\
        %s --start-app [with-wait]   # \"                     \"\n\
-       %s --stop-app\n",arg,arg,arg, arg, arg);
+       %s --stop-app\n",arg,arg,arg,arg,arg,arg);
 }
 
 int main(int argc, char** argv) {
@@ -38,38 +39,43 @@ int main(int argc, char** argv) {
 	int i = 1;
 	if (argc == 1)
 		goto inputError;
-	initGui();
 	conn = getConnectionPtr(host,1);
 	if (conn == NULL) {
-		ret = -1;
+		ret = 99;
 		goto end;
 	}
 	for (char* arg = argv[i]; i < argc; i++) {
 		if (strcmp(arg, "--restart-app") == 0) {
+			initGui();
 			if ((i + 1) < argc) {
 				if (strcmp(argv[++i],"with-wait") == 0) {
 					setWait();
-					rebootDomains(1);
+					ret = rebootDomains(1);
 					goto end;
 				}
 			}
-			rebootDomains(0);
+			ret = rebootDomains(0);
+			killGui();
 			goto end;
 		} else if (strcmp(arg,"--start-app") == 0) {
+			initGui();
 			if ((i + 1) < argc)
 				if (strcmp(argv[++i],"with-wait") == 0) {
 					printf("Got with-wait\n");
 					sleep(1);
 					setWait();
-					startDomains(1);
+					ret = startDomains(1);
 					goto end;
 				}
-			startDomains(0);
+			ret = startDomains(0);
+			killGui();
 			goto end;
 		} else if (strcmp(arg,"--stop-app") == 0) {
+			initGui();
 			stopDomains();
+			killGui();
 			goto end;
-		} else if (strcmp(arg,"--stop")==0) {
+		} else if (strcmp(arg,"--stop") == 0) {
                         if ((argc - i) < 2)
                            goto inputError;
                         char* domain;
@@ -77,8 +83,6 @@ int main(int argc, char** argv) {
                         domain = argv[++i];
                         virDomainPtr doma = getDomainPtr(domain,conn);
                         ret = stopDomain(doma);
-			while (isRunning(doma) == 1)
-				pass();
                         virDomainFree(doma);
                         goto end;
                 } else if (strcmp(arg,"--start") == 0) {
@@ -89,12 +93,19 @@ int main(int argc, char** argv) {
                         domain = argv[++i];
                         virDomainPtr doma = getDomainPtr(domain,conn);
                         ret = startDomain(doma);
-			while (isRunning(doma) != 1)
-				pass();
                         virDomainFree(doma);
                         goto end;
-		} else
-			goto inputError;
+		} else if (strcmp(arg,"--status") == 0) {
+			if ((i + 1) > argc)
+				goto inputError;
+			char *domain;
+
+			domain = argv[++i];
+			virDomainPtr doma = getDomainPtr(domain,conn);
+			ret = isRunning(doma);
+			virDomainFree(doma);
+			goto end;
+		}
 	}
 inputError:
 	printUsage(argv[0]);
@@ -102,50 +113,89 @@ inputError:
 end:
 	if (conn != NULL)
 		virConnectClose(conn);
-	killGui();
 	return(ret);
 }
 
-void stopDomains() {
+// Stops the domains from bottom to top.
+// returns number of running domains in app
+// that should have been stopped but weren't.
+// 0 is good, anything but is bad.
+int stopDomains() {
+	int ret = sizeof(domains)/sizeof(char*);
 	for (int i = 0; i < sizeof(domains)/sizeof(char *); i++) {
 		virDomainPtr doma = getDomainPtr(domains[i], conn);
 		if (doma != NULL) {
 			char message[28];
 			sprintf(message, "Stopping domain %s", domains[i]);
 			drawMessage(message);
-			stopDomain(doma);
-			while (isRunning(doma) == 1)
-				pass();
+			if (stopDomain(doma) == 0)
+				ret--;
 			virDomainFree(doma);
-		}	
-	}	
+		}
+	}
+	return ret;
 }
 
-void startDomains(int waitForStart) {
+// Start domains from top to bottom.
+// Takes an int, which if set to anything other than
+// 0, will cause to wait for the server to respond on the
+// corresponding port.
+// Returns the number of domains that did not start.
+// 0 is good, anything but is bad.
+int startDomains(int waitForStart) {
+	int ret = 0;
 	for (int i = sizeof(domains)/sizeof(char *) - 1; i >= 0; i--) {
 		virDomainPtr doma = getDomainPtr(domains[i], conn);
 		if (doma != NULL) {
 			char message[50];
 			sprintf(message, "Starting domain %s", domains[i]);
 			drawMessage(message);
-			startDomain(doma);
-			while (isRunning(doma) != 1)
-				pass();
+			if (startDomain(doma) != 0)
+				ret += 1;
+			else {
+			sprintf(message, "Waiting for ''start'' of %s", domains[i]);
+			while (isRunning(doma) != 1) {
+
+			}
 			if (waitForStart) {
 				sprintf(message, "Waiting for domain %s on %i", domains[i], ports[i]);
 				drawMessage(message);
 				openAndWaitOnSocket(ports[i]);
-			}	
+			}
+			}
 		}
 	}
+	return ret;
 }
 
-void rebootDomains(int waitForStart) {
-	stopDomains();
+// restarts the domains, in the order of listing.
+// returns if all steps went according to plan.
+// 0 is good.
+// 1 means failed to stop some.
+// 2 means failed to start some.
+// 3 means failed parts of both steps.
+int rebootDomains(int waitForStart) {
+	int ret = 0;
+	if (stopDomains() != 0) {
+		drawMessage("Failed to stop some domains. pls check");
+		ret += 1;
+		sleep(2);
+	}	
+
+	// wait for an annoying amount of time......
 	wait();
-	startDomains(waitForStart);
+
+	if (startDomains(waitForStart) != 0) {
+		drawMessage("Failed to start some domains. pls check");
+		ret += 2;
+		sleep(2);
+	}
+	return ret;
 }
 
+// waits 30 seconds.
+// returns nothing.
+// make fun.
 void wait() {
 	int i = 30;
 	char message[30];

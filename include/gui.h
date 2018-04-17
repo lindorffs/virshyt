@@ -85,13 +85,12 @@ void drawMessage(char* message) {
 		attron(COLOR_PAIR(ANNOY));
 
 		move(3,3);
-		printw("LOOK AT ME I HAVE TO WAIT!");
+		printw("Gosh, this sure sucks.");
 
 		attroff(COLOR_PAIR(ANNOY));
 	}
 	refresh();
 }
-
 
 void killGui() {
 	endwin();

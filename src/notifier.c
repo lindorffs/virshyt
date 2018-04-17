@@ -18,8 +18,7 @@ int main(int argc, char** argv) {
                         char *host = argv[++i];
                         int port = atoi(argv[++i]);
                         char *data = argv[++i];
-			printf("%d",port);
-                        connectToAndSendOnSocket(port, host, data);
+                        return(connectToAndSendOnSocket(port, host, data));
                         goto end;
                 }
 	}

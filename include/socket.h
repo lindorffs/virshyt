@@ -59,7 +59,7 @@ void openAndWaitOnSocket(int portno) {
 	close(sockfd);
 }
 
-void connectToAndSendOnSocket(int portno, char* host, char* data) {
+int connectToAndSendOnSocket(int portno, char* host, char* data) {
 	int sockfd, n;
 	struct sockaddr_in serv_addr;
 	struct hostent *server;
@@ -67,42 +67,27 @@ void connectToAndSendOnSocket(int portno, char* host, char* data) {
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (sockfd < 0) {
-		fprintf(stderr,"Failed to open socket\n");
-		return;
-	} else
-		printf("Opened socket\n");
+		return 3;
+	}
 
 	server = gethostbyname(host);
 	if (server == NULL) {
-		fprintf(stderr,"Host does not exist\n");
 		close(sockfd);
-		return;
-	} else
-		printf("Found host\n");
+		return 3;
+	}
 
 	bzero((char *)&serv_addr, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
 	bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
 	serv_addr.sin_port = htons(portno);
-	
-	printf("Connecting to host on port %d\n",serv_addr.sin_port);
 
 	if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
-		fprintf(stderr,"Failed to connect on socket\n");
 		close(sockfd);
-		return;
-	} else
-		printf("Connected to host\n");
-
-	n = write(sockfd, data, strlen(data));
-
-	if (n < 0) {
-		fprintf(stderr,"Failed to write data on socket\n");
-		close(sockfd);
-		return;
+		return 1;
 	}
 
 	close(sockfd);
+	return 0;
 }
 
 #endif
