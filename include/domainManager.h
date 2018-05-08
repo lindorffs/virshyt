@@ -5,8 +5,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+// this returns a virConnectPtr
+// it takes a libvirt domain name,
+// and a read/write flag
 virConnectPtr getConnectionPtr(const char *name, int rw) {
 	virConnectPtr ret = NULL;
+	// if rw != 0: open a read write connection
+	//       else: open a read connection
 	ret = rw != 0 ? virConnectOpen(name) : virConnectOpenReadOnly(name);
 	if (ret == NULL)
 		goto error;
@@ -16,14 +22,9 @@ error:
 	return NULL;
 }
 
-int getNumDomains(virConnectPtr conn) {
-	int numDomains = virConnectNumOfDomains(conn);
-	int *activeDomains;
-
-	activeDomains = malloc(sizeof(int) * numDomains);
-	return virConnectListDomains(conn, activeDomains, numDomains);
-}
-
+// this returns a virDomainPtr to the given domain name
+// it takes a domain name
+// and a virConnectPtr
 virDomainPtr getDomainPtr(const char *name, virConnectPtr conn) {
 	virDomainPtr ret = NULL;
 	ret = virDomainLookupByName(conn, name);
@@ -36,7 +37,8 @@ error:
 
 }
 
-
+// this returns 1 if running, 0 if not.
+// it takes a virDomainPtr
 int isRunning(virDomainPtr doma) {
 	int state = 0;
 	if (virDomainGetState(doma,&state,NULL,0) != 0)
@@ -49,30 +51,31 @@ error:
 	return -1;
 }
 
+// this returns 1 if the domain fails to stop
+// 0 if not
 int stopDomain(virDomainPtr doma) {
-	int ret = 0;
-
-	ret = virDomainShutdown(doma);
-	if (ret != 0)
+	if(virDomainShutdown(doma) != 0)
 		goto error;
-	return ret;
+	return 0;
 error:
 	fprintf(stderr,"failed to stop domain %s\n",virDomainGetName(doma));
 	return 1;
 }
 
+// this returns 1 if the domain fails to start
+// 0 if not
 int startDomain(virDomainPtr doma) {
-	int ret = 0;
-	
-	ret = virDomainCreate(doma);
-	if (ret != 0)
+	if(virDomainCreate(doma) != 0)
 		goto error;
-	return ret;
+	return 0;
 error:
 	fprintf(stderr,"failed to start domain %s\n",virDomainGetName(doma));
 	return 1;
 }
 
+
+// this should get a domains first network interface
+// but it is broken, and is not used anywhere.
 char* getDomainInterface(virDomainPtr doma) {
 	virDomainInterfacePtr *ifaces = NULL;
 	int ifaces_count = 0;
