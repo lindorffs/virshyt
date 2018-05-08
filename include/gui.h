@@ -13,7 +13,7 @@ int mx, my, willWait;
 
 char* kitteh[16];
 
-void initGui() {
+void initGui(void) {
         kitteh[0] = "\\;,._                           _,,-";
         kitteh[1] = "\\`;, `-._ _..--'''```--.._ __.-',;( ";
         kitteh[2] = " \\ `;,  `:.  ,   ;.   .   :'  .;` / ";
@@ -41,7 +41,7 @@ void initGui() {
 	init_pair(ANNOY, COLOR_BLACK, COLOR_RED);
 }
 
-void setWait() {
+void setWait(void) {
 	if (willWait != 0)
 		willWait = 0;
 	else
@@ -92,7 +92,7 @@ void drawMessage(char* message) {
 	refresh();
 }
 
-void killGui() {
+void killGui(void) {
 	clear();
 	endwin();
 }

@@ -15,16 +15,16 @@ virConnectPtr conn;
 
 // Function Prototypes
 
-int rebootDomains();
+int rebootDomains(int);
 int startDomains(int);
-int stopDomains();
+int stopDomains(void);
 
-void wait();
-void pass() {};
+void wait(void);
+void pass(void) {};
 
 // is called, but returns right away.
 // still working on this....
-void loadConfig() {
+void loadConfig(void) {
 	return;
 	char *lines[] = {"qemu+tcp://cis235-studentvm/system", "gitserver", "ca" };
 	memset(host, 0, sizeof(host));
@@ -155,7 +155,7 @@ end:
 // returns number of running domains in app
 // that should have been stopped but weren't.
 // 0 is good, anything but is bad.
-int stopDomains() {
+int stopDomains(void) {
 	int ret = sizeof(domains)/sizeof(char*);
 	for (int i = 0; i < sizeof(domains)/sizeof(char *); i++) {
 		virDomainPtr doma = getDomainPtr(domains[i], conn);
@@ -251,7 +251,7 @@ int rebootDomains(int waitForStart) {
 // waits 30 seconds.
 // returns nothing.
 // make fun.
-void wait() {
+void wait(void) {
 	int i = 30;
 	char message[30];
 	while (i >= 0) {
