@@ -218,6 +218,7 @@ int startDomains(int waitForStart) {
 						s = connectToAndSendOnSocket(22, domains[i]);
 				}
 			}
+			virDomainFree(doma);
 		}
 	}
 	return ret;
