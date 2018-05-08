@@ -1,4 +1,4 @@
-#virshyt: for when virsh is just to much
+# virshyt: for when virsh is just to much
 
 lets face it. restarting all the things is just hard.
 this makes it kind of easier?
@@ -20,13 +20,19 @@ starting or restarting a list of domains.
 # the options
 ## virtman
 usage: ./build/virtman --start <domain>
+
        ./build/virtman --stop <domain>
+
        ./build/virtman --status <domain>
+
        ./build/virtman --restart-app [with-wait] # with-wait requires root
+
        ./build/virtman --start-app [with-wait]   # "                     "
+
        ./build/virtman --stop-app
 
 ## notifier
 usage: ./build/notifier --serv <port>
+
        ./build/notifier --cli <host> <port> <data> # the data is not actually sent.
 
