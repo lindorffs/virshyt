@@ -18,12 +18,15 @@ int main(int argc, char** argv) {
                         char *host = argv[++i];
                         int port = atoi(argv[++i]);
                         return(connectToAndSendOnSocket(port, host));
-                        goto end;
-                }
+                } else if (strcmp(arg,"--serv") == 0) {
+			if (argc < i + 1)
+				goto inputError;
+			int port = atoi(argv[++i]);
+			openAndWaitOnSocket(port);
+			return(0);
+		}
 	}
 inputError:
 	printUsage(argv[0]);
 	return(1);
-end:
-	return(0);
 }
