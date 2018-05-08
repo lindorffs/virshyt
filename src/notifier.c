@@ -2,7 +2,7 @@
 
 void printUsage(char* prog) {
 	printf("usage: %s --serv <port>\n\
-       %s --cli <host> <port> <data>\n",prog,prog);
+       %s --cli <host> <port>\n",prog,prog);
 }
 
 int main(int argc, char** argv) {
@@ -13,12 +13,11 @@ int main(int argc, char** argv) {
 
         for (char* arg = argv[i]; i < argc; i++) {
                 if (strcmp(arg,"--cli") == 0) {
-                        if (argc < i + 4)
+                        if (argc < i + 3)
                                 goto inputError;
                         char *host = argv[++i];
                         int port = atoi(argv[++i]);
-                        char *data = argv[++i];
-                        return(connectToAndSendOnSocket(port, host, data));
+                        return(connectToAndSendOnSocket(port, host));
                         goto end;
                 }
 	}

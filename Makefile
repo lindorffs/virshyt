@@ -6,7 +6,7 @@ SRC_DIR=src/
 SRC=${SRC_DIR}main.c
 
 OUT_DIR=build/
-OUT=virtman
+OUT=virshyt
 
 main: ${SRC}
 	${CC} $^ -o ${OUT_DIR}${OUT} -I${INCLUDE_DIR} ${LIBS}

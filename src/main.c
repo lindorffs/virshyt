@@ -22,6 +22,8 @@ int stopDomains();
 void wait();
 void pass() {};
 
+// is called, but returns right away.
+// still working on this....
 void loadConfig() {
 	return;
 	char *lines[] = {"qemu+tcp://cis235-studentvm/system", "gitserver", "ca" };
@@ -41,53 +43,69 @@ void printUsage(char* arg) {
 usage: %s --start <domain>\n\
        %s --stop <domain>\n\
        %s --status <domain>\n\
-       %s --restart-app [with-wait] # with-wait requires root\n\
-       %s --start-app [with-wait]   # \"                     \"\n\
+       %s --restart-app [with-wait]\n\
+       %s --start-app [with-wait]\n\
        %s --stop-app\n",arg,arg,arg,arg,arg,arg);
 }
 
+// this ungodly function uses a hideous loop. it's unneeded.
+// i just don't want to get rid of it. there's probably
+// 10,000,000 other ways to do it, all of which are better.
+// if you've got a problem with "it works, leave it be..."
+// you can fix it.
+
 int main(int argc, char** argv) {
-	int ret = 0;
+	int ret = 0; // we return this value at the end, setting as we go.
 	int i = 1;
-	if (argc == 1)
+	if (argc == 1) // we need more than 1 argument, no matter what.
 		goto inputError;
-	conn = getConnectionPtr(host,1);
+	conn = getConnectionPtr(host,1); // get our libvirt connection pointer
+					 // store it outside the function so our
+					 // other functions can use it.
 	if (conn == NULL) {
-		ret = 99;
+		ret = 99;		 // return an absurd value, because our
+					 // connection to the host failed.
 		goto end;
 	}
 	for (char* arg = argv[i]; i < argc; i++) {
 		if (strcmp(arg, "--restart-app") == 0) {
-			initGui();
+			initGui(); // we're going to need ncurses
 			if ((i + 1) < argc) {
 				if (strcmp(argv[++i],"with-wait") == 0) {
-					setWait();
-					ret = rebootDomains(1);
-					killGui();
+					setWait(); // set this so our ncurses
+						   // displays a little message
+						   // in the corner.
+					ret = rebootDomains(1); // error handling
+								// occurs within
+								// rebootDomains()
+					killGui();	// kill ncurses.
 					goto end;
 				}
 			}
-			ret = rebootDomains(0);
+			ret = rebootDomains(0); // error handling occurs within
+						// rebootDomains()
 			killGui();
 			goto end;
 		} else if (strcmp(arg,"--start-app") == 0) {
-			initGui();
+			initGui(); // ncurses
 			if ((i + 1) < argc)
 				if (strcmp(argv[++i],"with-wait") == 0) {
-					printf("Got with-wait\n");
-					sleep(1);
-					setWait();
-					ret = startDomains(1);
-					killGui();
+					setWait(); // show a thingy
+					ret = startDomains(1); // returns how many
+							       // domains did not
+							       // start.
+					killGui(); // no more ncurses.
 					goto end;
 				}
-			ret = startDomains(0);
-			killGui();
+			ret = startDomains(0); // returns how many domains did not
+					       // start.
+			killGui(); // no more ncurses
 			goto end;
 		} else if (strcmp(arg,"--stop-app") == 0) {
-			initGui();
-			stopDomains();
-			killGui();
+			initGui(); // ncurses
+			ret = stopDomains(); // returns how many domains did not
+					     // stop.
+			killGui(); // no more ncurses
 			goto end;
 		} else if (strcmp(arg,"--stop") == 0) {
                         if ((argc - i) < 2)
@@ -96,7 +114,8 @@ int main(int argc, char** argv) {
 
                         domain = argv[++i];
                         virDomainPtr doma = getDomainPtr(domain,conn);
-                        ret = stopDomain(doma);
+                        ret = stopDomain(doma); // returns 0 if the domain stops
+						// returns 1 if not.
                         virDomainFree(doma);
                         goto end;
                 } else if (strcmp(arg,"--start") == 0) {
@@ -106,7 +125,8 @@ int main(int argc, char** argv) {
 
                         domain = argv[++i];
                         virDomainPtr doma = getDomainPtr(domain,conn);
-                        ret = startDomain(doma);
+                        ret = startDomain(doma); // returns 0 if the domain starts
+						 // returns 1 if not.
                         virDomainFree(doma);
                         goto end;
 		} else if (strcmp(arg,"--status") == 0) {
@@ -116,7 +136,8 @@ int main(int argc, char** argv) {
 
 			domain = argv[++i];
 			virDomainPtr doma = getDomainPtr(domain,conn);
-			ret = isRunning(doma);
+			ret = isRunning(doma); // returns 0 if not running.
+					       // returns 1 if it is. 
 			virDomainFree(doma);
 			goto end;
 		}
@@ -141,12 +162,18 @@ int stopDomains() {
 		if (doma != NULL) {
 			char message[28];
 			sprintf(message, "Stopping domain %s", domains[i]);
-			drawMessage(message);
-			if (stopDomain(doma) == 0)
-				ret--;
-			while (isRunning(doma) != 0) {
 
+			drawMessage(message);
+
+			if (stopDomain(doma) == 0) {
+				// decrement the number of domains
+				// to be stopped.
+				ret--;
+				while (isRunning(doma) != 0) {
+					// wait until stopped.
+				}
 			}
+			// free the domain
 			virDomainFree(doma);
 		}
 	}
@@ -167,20 +194,28 @@ int startDomains(int waitForStart) {
 		if (doma != NULL) {
 			char message[50];
 			sprintf(message, "Starting domain %s", domains[i]);
+
 			drawMessage(message);
+
+			// if the domain failed to start
+			// increment the error count
 			if (startDomain(doma) != 0)
 				ret += 1;
 			else {
+				// else wait for it to report started
 				sprintf(message, "Waiting for ''start'' of %s", domains[i]);
 				while (isRunning(doma) != 1) {
 
 				}
+
+				// if told to wait for actual start
 				if (waitForStart) {
 					sprintf(message, "Waiting for domain %s to do the ssh", domains[i]);
 					drawMessage(message);
 					int s = 1;
+					// wait for a connection to port 22 on the domain.
 					while ( s != 0 )
-						s = connectToAndSendOnSocket(22, domains[i],"");
+						s = connectToAndSendOnSocket(22, domains[i]);
 				}
 			}
 		}

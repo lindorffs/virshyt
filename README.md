@@ -25,14 +25,14 @@ starting or restarting a list of domains.
 
 	./build/virtman --status <domain>
 
-	./build/virtman --restart-app [with-wait] # with-wait requires root
+	./build/virtman --restart-app [with-wait]
 
-	./build/virtman --start-app [with-wait]   # "                     "
+	./build/virtman --start-app [with-wait]
 
 	./build/virtman --stop-app
 
 ## notifier
 	./build/notifier --serv <port>
 
-       ./build/notifier --cli <host> <port> <data> # the data is not actually sent.
+	./build/notifier --cli <host> <port>
 

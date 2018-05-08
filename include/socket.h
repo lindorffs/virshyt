@@ -46,20 +46,11 @@ void openAndWaitOnSocket(int portno) {
 		return;
 	}
 
-	bzero(buffer,BUF_SIZE);
-	n = read(newsockfd, buffer, BUF_SIZE-1);
-
-	if (n < 0) {
-		fprintf(stderr,"Failed to read socket\n");
-		return;
-	}
-	n = write(newsockfd,"MSGRECV",strlen("MSGRECV"));
-
 	close(newsockfd);
 	close(sockfd);
 }
 
-int connectToAndSendOnSocket(int portno, char* host, char* data) {
+int connectToAndSendOnSocket(int portno, char* host) {
 	int sockfd, n;
 	struct sockaddr_in serv_addr;
 	struct hostent *server;
