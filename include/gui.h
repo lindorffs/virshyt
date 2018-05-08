@@ -36,8 +36,8 @@ void initGui() {
 	curs_set(0);
 	start_color();
 	init_pair(BORDER, COLOR_BLACK, COLOR_WHITE);
-	init_pair(BACKGROUND, COLOR_BLACK, COLOR_BLUE);
-	init_pair(FOREGROUND, COLOR_WHITE, COLOR_BLACK);
+	init_pair(BACKGROUND, COLOR_BLACK, COLOR_BLACK);
+	init_pair(FOREGROUND, COLOR_BLUE, COLOR_BLACK);
 	init_pair(ANNOY, COLOR_BLACK, COLOR_RED);
 }
 
@@ -93,6 +93,7 @@ void drawMessage(char* message) {
 }
 
 void killGui() {
+	clear();
 	endwin();
 }
 #endif

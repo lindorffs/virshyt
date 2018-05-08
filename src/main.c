@@ -9,9 +9,8 @@
 
 // Global Variables
 
-char *domains[5] = {"gitserver","ca","webserver","ldapserver","logserver"};
+char *domains[] = {"ca","gitserver","webserver","ldapserver","logserver"};
 char *host = "qemu+tcp://cis235-studentvm/system";
-int ports[5] = {559,558,557,556,555};
 virConnectPtr conn;
 
 // Function Prototypes
@@ -22,6 +21,19 @@ int stopDomains();
 
 void wait();
 void pass() {};
+
+void loadConfig() {
+	return;
+	char *lines[] = {"qemu+tcp://cis235-studentvm/system", "gitserver", "ca" };
+	memset(host, 0, sizeof(host));
+	strcpy(host, lines[0]);
+	for (int i = 0; i < sizeof(domains)/sizeof(char *); i++) {
+		memset(domains[i], 0, sizeof(domains[i]));
+	}
+	strcpy(domains[0],"test");
+//	memset(domains, 0, sizeof(domains));
+//	strcpy(domains[0], lines[1]);
+}
 
 // Usage info
 void printUsage(char* arg) {
@@ -51,6 +63,7 @@ int main(int argc, char** argv) {
 				if (strcmp(argv[++i],"with-wait") == 0) {
 					setWait();
 					ret = rebootDomains(1);
+					killGui();
 					goto end;
 				}
 			}
@@ -65,6 +78,7 @@ int main(int argc, char** argv) {
 					sleep(1);
 					setWait();
 					ret = startDomains(1);
+					killGui();
 					goto end;
 				}
 			ret = startDomains(0);
@@ -130,9 +144,13 @@ int stopDomains() {
 			drawMessage(message);
 			if (stopDomain(doma) == 0)
 				ret--;
+			while (isRunning(doma) != 0) {
+
+			}
 			virDomainFree(doma);
 		}
 	}
+	clear();
 	return ret;
 }
 
@@ -153,15 +171,17 @@ int startDomains(int waitForStart) {
 			if (startDomain(doma) != 0)
 				ret += 1;
 			else {
-			sprintf(message, "Waiting for ''start'' of %s", domains[i]);
-			while (isRunning(doma) != 1) {
+				sprintf(message, "Waiting for ''start'' of %s", domains[i]);
+				while (isRunning(doma) != 1) {
 
-			}
-			if (waitForStart) {
-				sprintf(message, "Waiting for domain %s on %i", domains[i], ports[i]);
-				drawMessage(message);
-				openAndWaitOnSocket(ports[i]);
-			}
+				}
+				if (waitForStart) {
+					sprintf(message, "Waiting for domain %s to do the ssh", domains[i]);
+					drawMessage(message);
+					int s = 1;
+					while ( s != 0 )
+						s = connectToAndSendOnSocket(22, domains[i],"");
+				}
 			}
 		}
 	}
