@@ -1,5 +1,7 @@
 # virshyt: for when virsh is just to much
-
+## I AM NOT A COMPSCI MAJOR BY ANY MEANS.
+## THAT MEANS THIS CODE IS AS FAR FROM ANY
+## STANDARD AS POSSIBLE. ENJOY THE SHYTSHOW
 lets face it. restarting all the things is just hard.
 this makes it kind of easier?
 
